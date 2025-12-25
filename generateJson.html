@@ -1,156 +1,109 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Wallpaper JSON Generator</title>
   <style>
     body {
-      background: #111;
-      color: #eee;
       font-family: monospace;
+      background: #0f172a;
+      color: #e5e7eb;
       padding: 20px;
     }
     textarea {
       width: 100%;
-      height: 400px;
-      background: #1e1e1e;
-      color: #0f0;
-      border: 1px solid #444;
-      padding: 12px;
-      font-size: 14px;
+      height: 260px;
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+      padding: 10px;
+      margin-bottom: 10px;
     }
     button {
-      margin-top: 16px;
-      padding: 12px 24px;
-      font-size: 16px;
-      cursor: pointer;
-      background: #00ff9c;
+      padding: 10px 16px;
+      background: #22c55e;
       border: none;
-      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 10px;
     }
   </style>
 </head>
 <body>
 
-<h2>🔥 Config JSON</h2>
-<textarea id="configInput"></textarea>
+<h2>🧠 Category Config JSON</h2>
 
-<button onclick="generate()">🚀 Generate & Download</button>
+<textarea id="configInput">
+[
+  {
+    "baseCreatedAt": 1760677055,
+    "baseUrl": "https://cdn.jsdelivr.net/gh/tramiune/tramiune001_res_wallpaper/app/src/main/assets/resources/anime/",
+    "categoryId": "101_anime",
+    "fileNamePrefix": "anime_",
+    "liveItemNumbers": [1,2,3],
+    "previewItemNumbers": [1,2,3],
+    "doubleItems": [5,6],
+    "daysItems": [7],
+    "coupleItemsPreview": [10],
+    "coupleItemsNoPreview": [11],
+    "orderItems": [5,1,10,2,7,3,4,6,8,9,15,12,14,13,11]
+  },
+  {
+    "baseCreatedAt": 1760677055,
+    "baseUrl": "https://cdn.jsdelivr.net/gh/tramiune/tramiune001_res_wallpaper/app/src/main/assets/resources/silly/",
+    "categoryId": "102_silly",
+    "fileNamePrefix": "silly_",
+    "liveItemNumbers": [1,2,3],
+    "previewItemNumbers": [1,2,3],
+    "doubleItems": [5,6],
+    "daysItems": [7],
+    "coupleItemsPreview": [10],
+    "coupleItemsNoPreview": [11],
+    "orderItems": [5,1,10,2,7,3,4,6,8,9,15,12,14,13,11]
+  }
+]
+</textarea>
+
+<button onclick="generate()">Generate</button>
+<button onclick="download()">Download JSON</button>
+
+<h2>📦 Output</h2>
+<textarea id="output"></textarea>
 
 <script>
-const Type = {
-  STILL: 1,
-  LIVE: 0,
-  DOUBLE: 2,
-  DAYS: 3,
-  COUPLE: 4
-};
-
-function generateCategoryItems(config) {
-  if (!config.orderItems || config.orderItems.length === 0) {
-    throw new Error("orderItems is required");
-  }
-
-  const items = [];
-
-  config.orderItems.forEach((i, orderIndex) => {
-    const numStr = String(i).padStart(3, "0");
-    const createdAt = config.baseCreatedAt + orderIndex;
-    const id = `${config.categoryId}_${numStr}`;
-
-    let type = Type.STILL;
-    let medias = [];
-
-    if (config.doubleItems?.includes(i)) {
-      type = Type.DOUBLE;
-      medias = [
-        { url: `${config.baseUrl}double_${numStr}_0.webp`, name: `double_${numStr}_0.webp`, thumbUrl: "", contentType: "image/webp" },
-        { url: `${config.baseUrl}double_${numStr}_1.webp`, name: `double_${numStr}_1.webp`, thumbUrl: "", contentType: "image/webp" }
-      ];
-    } else if (config.daysItems?.includes(i)) {
-      type = Type.DAYS;
-      ["06","12","18","24"].forEach(h => {
-        medias.push({
-          url: `${config.baseUrl}days_${numStr}_${h}h.webp`,
-          name: `days_${numStr}_${h}h.webp`,
-          thumbUrl: "",
-          hour: `${h}:00`,
-          contentType: "image/webp"
-        });
-      });
-    } else if (
-      config.coupleItemsPreview?.includes(i) ||
-      config.coupleItemsNoPreview?.includes(i)
-    ) {
-      type = Type.COUPLE;
-      medias.push({
-        url: `${config.baseUrl}couple_${numStr}.webp`,
-        name: `couple_${numStr}.webp`,
-        thumbUrl: config.coupleItemsPreview?.includes(i)
-          ? `${config.baseUrl}couple_${numStr}_preview.webp`
-          : "",
-        contentType: "image/webp"
-      });
-    } else if (config.liveItemNumbers?.includes(i)) {
-      type = Type.LIVE;
-      medias.push(
-        {
-          url: `${config.baseUrl}${config.fileNamePrefix}${numStr}.mp4`,
-          name: `${config.fileNamePrefix}${numStr}.mp4`,
-          thumbUrl: "",
-          contentType: "video/mp4"
-        },
-        {
-          url: `${config.baseUrl}${config.fileNamePrefix}${numStr}.webp`,
-          name: `${config.fileNamePrefix}${numStr}.webp`,
-          thumbUrl: config.previewItemNumbers?.includes(i)
-            ? `${config.baseUrl}${config.fileNamePrefix}${numStr}_preview.webp`
-            : "",
-          contentType: "image/webp"
-        }
-      );
-    } else {
-      medias.push({
-        url: `${config.baseUrl}${config.fileNamePrefix}${numStr}.webp`,
-        name: `${config.fileNamePrefix}${numStr}.webp`,
-        thumbUrl: config.previewItemNumbers?.includes(i)
-          ? `${config.baseUrl}${config.fileNamePrefix}${numStr}_preview.webp`
-          : "",
-        contentType: "image/webp"
-      });
-    }
-
-    items.push({
-      id,
-      medias,
-      categoryId: config.categoryId,
-      isPremium: true,
-      createdAt,
-      subType: 0,
-      type,
-      coinToUnlock: 0
-    });
-  });
-
-  return items;
-}
-
 function generate() {
   try {
-    const configs = JSON.parse(document.getElementById("configInput").value);
-    const allItems = configs.flatMap(generateCategoryItems);
-    download("all_items.json", JSON.stringify(allItems, null, 2));
+    const configs = JSON.parse(document.getElementById("configInput").value)
+    let allItems = []
+
+    configs.forEach(cfg => {
+      cfg.orderItems.forEach((i, idx) => {
+        const num = String(i).padStart(3, "0")
+        allItems.push({
+          id: `${cfg.categoryId}_${num}`,
+          categoryId: cfg.categoryId,
+          createdAt: cfg.baseCreatedAt + idx
+        })
+      })
+    })
+
+    document.getElementById("output").value =
+      JSON.stringify(allItems, null, 2)
+
   } catch (e) {
-    alert("❌ Lỗi config: " + e.message);
+    alert("JSON lỗi nha bro 😭")
   }
 }
 
-function download(name, text) {
-  const blob = new Blob([text], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
+function download() {
+  const blob = new Blob(
+    [document.getElementById("output").value],
+    { type: "application/json" }
+  )
+  const a = document.createElement("a")
+  a.href = URL.createObjectURL(blob)
+  a.download = "wallpaper_items.json"
+  a.click()
 }
 </script>
 
