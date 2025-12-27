@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Wallpaper JSON Generator</title>
+
   <style>
     body {
       background: #0f172a;
@@ -12,7 +13,7 @@
     }
     textarea {
       width: 100%;
-      min-height: 280px;
+      min-height: 260px;
       background: #020617;
       color: #e5e7eb;
       border: 1px solid #334155;
@@ -29,40 +30,13 @@
     }
   </style>
 </head>
+
 <body>
 
-<h2>📥 Category Config JSON</h2>
-<textarea id="input">
-[
-  {
-    "baseCreatedAt": 1760677055,
-    "baseUrl": "https://cdn.jsdelivr.net/gh/tramiune/tramiune001_res_wallpaper/app/src/main/assets/resources/anime/",
-    "categoryId": "101_anime",
-    "fileNamePrefix": "anime_",
-    "liveItemNumbers": [1,2,3],
-    "previewItemNumbers": [1,2,3],
-    "doubleItems": [5,6],
-    "daysItems": [7],
-    "coupleItemsPreview": [10],
-    "coupleItemsNoPreview": [11],
-    "orderItems": [5,1,10,2,7,3,4,6,8,9,15,12,14,13,11]
-  },
-  {
-    "baseCreatedAt": 1760677055,
-    "baseUrl": "https://cdn.jsdelivr.net/gh/tramiune/tramiune001_res_wallpaper/app/src/main/assets/resources/silly/",
-    "categoryId": "102_silly",
-    "fileNamePrefix": "silly_",
-    "liveItemNumbers": [1,2,3],
-    "previewItemNumbers": [1,2,3],
-    "doubleItems": [5,6],
-    "daysItems": [7],
-    "coupleItemsPreview": [10],
-    "coupleItemsNoPreview": [11],
-    "orderItems": [5,1,10,2,7,3,4,6,8,9,15,12,14,13,11]
-  }
-]
-</textarea>
+<h2>📥 Category Config (Loaded from API)</h2>
+<textarea id="input" readonly placeholder="Click 'Load API'..."></textarea>
 
+<button onclick="loadFromApi()">Load API</button>
 <button onclick="generate()">Generate</button>
 <button onclick="download()">Download</button>
 
@@ -70,14 +44,63 @@
 <textarea id="output"></textarea>
 
 <script>
+/* =======================
+   CONSTANTS
+======================= */
+const API_URL =
+  "https://tramiune.github.io/tramiune001_res_wallpaper/dev/wallpaper.json"
+
 const Type = {
-  STILL: 1,
   LIVE: 0,
+  STILL: 1,
   DOUBLE: 2,
   DAYS: 3,
   COUPLE: 4
 }
 
+let apiData = null
+
+/* =======================
+   FETCH API
+======================= */
+async function loadFromApi() {
+  try {
+    const res = await fetch(API_URL)
+    if (!res.ok) throw new Error("API error")
+
+    apiData = await res.json()
+
+    document.getElementById("input").value =
+      JSON.stringify(apiData, null, 2)
+
+    alert("✅ API loaded")
+  } catch (e) {
+    alert("❌ Load API failed: " + e.message)
+  }
+}
+
+/* =======================
+   MAP API → CONFIG
+======================= */
+function mapApiToConfig(apiCategories) {
+  return apiCategories.map(cat => ({
+    baseCreatedAt: Math.floor(Date.now() / 1000),
+    baseUrl: cat.baseUrl,
+    categoryId: cat.categoryId ?? cat.id,
+    fileNamePrefix: cat.fileNamePrefix ?? "",
+    liveItemNumbers: cat.liveItems ?? [],
+    previewItemNumbers: cat.previewItems ?? [],
+    doubleItems: cat.doubleItems ?? [],
+    daysItems: cat.daysItems ?? [],
+    coupleItemsPreview: cat.coupleItemsPreview ?? [],
+    coupleItemsNoPreview: cat.coupleItemsNoPreview ?? [],
+    orderItems: cat.orderItems ?? cat.items ?? []
+  }))
+}
+
+/* =======================
+   GENERATE ITEMS
+======================= */
 function generateCategoryItems(cfg) {
   if (!cfg.orderItems || cfg.orderItems.length === 0) {
     throw "orderItems is required"
@@ -93,7 +116,7 @@ function generateCategoryItems(cfg) {
     let type = Type.STILL
     let medias = []
 
-    if (cfg.doubleItems?.includes(i)) {
+    if (cfg.doubleItems.includes(i)) {
       type = Type.DOUBLE
       medias = [
         {
@@ -111,7 +134,7 @@ function generateCategoryItems(cfg) {
       ]
     }
 
-    else if (cfg.daysItems?.includes(i)) {
+    else if (cfg.daysItems.includes(i)) {
       type = Type.DAYS
       const hours = ["06:00", "12:00", "18:00", "24:00"]
       medias = hours.map(h => ({
@@ -124,15 +147,15 @@ function generateCategoryItems(cfg) {
     }
 
     else if (
-      cfg.coupleItemsPreview?.includes(i) ||
-      cfg.coupleItemsNoPreview?.includes(i)
+      cfg.coupleItemsPreview.includes(i) ||
+      cfg.coupleItemsNoPreview.includes(i)
     ) {
       type = Type.COUPLE
       medias = [
         {
           url: `${cfg.baseUrl}couple_${num}.webp`,
           name: `couple_${num}.webp`,
-          thumbUrl: cfg.coupleItemsPreview?.includes(i)
+          thumbUrl: cfg.coupleItemsPreview.includes(i)
             ? `${cfg.baseUrl}couple_${num}_preview.webp`
             : "",
           contentType: "image/webp"
@@ -140,7 +163,7 @@ function generateCategoryItems(cfg) {
       ]
     }
 
-    else if (cfg.liveItemNumbers?.includes(i)) {
+    else if (cfg.liveItemNumbers.includes(i)) {
       type = Type.LIVE
       medias = [
         {
@@ -152,7 +175,7 @@ function generateCategoryItems(cfg) {
         {
           url: `${cfg.baseUrl}${cfg.fileNamePrefix}${num}.webp`,
           name: `${cfg.fileNamePrefix}${num}.webp`,
-          thumbUrl: cfg.previewItemNumbers?.includes(i)
+          thumbUrl: cfg.previewItemNumbers.includes(i)
             ? `${cfg.baseUrl}${cfg.fileNamePrefix}${num}_preview.webp`
             : "",
           contentType: "image/webp"
@@ -165,7 +188,7 @@ function generateCategoryItems(cfg) {
         {
           url: `${cfg.baseUrl}${cfg.fileNamePrefix}${num}.webp`,
           name: `${cfg.fileNamePrefix}${num}.webp`,
-          thumbUrl: cfg.previewItemNumbers?.includes(i)
+          thumbUrl: cfg.previewItemNumbers.includes(i)
             ? `${cfg.baseUrl}${cfg.fileNamePrefix}${num}_preview.webp`
             : "",
           contentType: "image/webp"
@@ -188,17 +211,30 @@ function generateCategoryItems(cfg) {
   return items
 }
 
+/* =======================
+   GENERATE OUTPUT
+======================= */
 function generate() {
   try {
-    const configs = JSON.parse(document.getElementById("input").value)
+    if (!apiData) {
+      alert("❗ Load API first")
+      return
+    }
+
+    const configs = mapApiToConfig(apiData)
     const allItems = configs.flatMap(generateCategoryItems)
+
     document.getElementById("output").value =
       JSON.stringify(allItems, null, 2)
+
   } catch (e) {
-    alert("❌ JSON hoặc config lỗi: " + e)
+    alert("❌ Generate error: " + e)
   }
 }
 
+/* =======================
+   DOWNLOAD JSON
+======================= */
 function download() {
   const blob = new Blob(
     [document.getElementById("output").value],
