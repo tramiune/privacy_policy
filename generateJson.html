@@ -2,8 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Wallpaper JSON Generator</title>
-
+  <title>Wallpaper Config Normalizer</title>
   <style>
     body {
       background: #0f172a;
@@ -28,219 +27,123 @@
       font-weight: bold;
       cursor: pointer;
     }
+    button.secondary {
+      background: #38bdf8;
+    }
   </style>
 </head>
-
 <body>
 
-<h2>📥 Category Config JSON</h2>
-<textarea id="input" placeholder="Click Load API..."></textarea>
+<h2>📥 API Raw Data</h2>
+<textarea id="input" placeholder="Load API trước..."></textarea>
 
-<button onclick="loadFromApi()">Load API</button>
-<button onclick="generate()">Generate</button>
+<button onclick="loadApi()">Load API</button>
+<button class="secondary" onclick="normalize()">Generate Config</button>
 <button onclick="download()">Download</button>
 
-<h2>📦 Output</h2>
+<h2>📦 Normalized Category Config</h2>
 <textarea id="output"></textarea>
 
 <script>
-/* =======================
-   CONSTANTS
-======================= */
 const API_URL =
   "https://tramiune.github.io/tramiune001_res_wallpaper/dev/wallpaper.json"
 
-const Type = {
-  LIVE: 0,
-  STILL: 1,
-  DOUBLE: 2,
-  DAYS: 3,
-  COUPLE: 4
-}
-
-/* =======================
-   API → CATEGORY CONFIG
-======================= */
-function apiToCategoryConfig(apiData) {
-  const now = Math.floor(Date.now() / 1000)
-
-  return apiData.map((c, index) => ({
-    baseCreatedAt: now + index * 1000,
-    baseUrl: c.baseUrl,
-    categoryId: c.categoryId || c.id,
-    fileNamePrefix: c.fileNamePrefix || "",
-    liveItemNumbers: c.liveItemNumbers || [],
-    previewItemNumbers: c.previewItemNumbers || [],
-    doubleItems: c.doubleItems || [],
-    daysItems: c.daysItems || [],
-    coupleItemsPreview: c.coupleItemsPreview || [],
-    coupleItemsNoPreview: c.coupleItemsNoPreview || [],
-    orderItems: c.orderItems || []
-  }))
-}
-
-/* =======================
-   LOAD API
-======================= */
-async function loadFromApi() {
+/**
+ * Load API raw
+ */
+async function loadApi() {
   try {
     const res = await fetch(API_URL)
-    if (!res.ok) throw new Error("API error")
-
-    const apiData = await res.json()
-    const configs = apiToCategoryConfig(apiData)
-
+    const json = await res.json()
     document.getElementById("input").value =
-      JSON.stringify(configs, null, 2)
-
-    alert("✅ API loaded & converted to config")
+      JSON.stringify(json, null, 2)
   } catch (e) {
-    alert("❌ Load API failed: " + e.message)
+    alert("❌ Load API failed: " + e)
   }
 }
 
-/* =======================
-   GENERATE ITEMS
-======================= */
-function generateCategoryItems(cfg) {
-  if (!cfg.orderItems || cfg.orderItems.length === 0) {
-    throw "orderItems is required"
-  }
-
-  const items = []
-
-  cfg.orderItems.forEach((i, index) => {
-    const num = String(i).padStart(3, "0")
-    const createdAt = cfg.baseCreatedAt + index
-    const id = `${cfg.categoryId}_${num}`
-
-    let type = Type.STILL
-    let medias = []
-
-    if (cfg.doubleItems.includes(i)) {
-      type = Type.DOUBLE
-      medias = [
-        {
-          url: `${cfg.baseUrl}double_${num}_0.webp`,
-          name: `double_${num}_0.webp`,
-          thumbUrl: "",
-          contentType: "image/webp"
-        },
-        {
-          url: `${cfg.baseUrl}double_${num}_1.webp`,
-          name: `double_${num}_1.webp`,
-          thumbUrl: "",
-          contentType: "image/webp"
-        }
-      ]
-    }
-
-    else if (cfg.daysItems.includes(i)) {
-      type = Type.DAYS
-      const hours = ["06:00", "12:00", "18:00", "24:00"]
-      medias = hours.map(h => ({
-        url: `${cfg.baseUrl}days_${num}_${h.slice(0,2)}h.webp`,
-        name: `days_${num}_${h.slice(0,2)}h.webp`,
-        thumbUrl: "",
-        hour: h,
-        contentType: "image/webp"
-      }))
-    }
-
-    else if (
-      cfg.coupleItemsPreview.includes(i) ||
-      cfg.coupleItemsNoPreview.includes(i)
-    ) {
-      type = Type.COUPLE
-      medias = [
-        {
-          url: `${cfg.baseUrl}couple_${num}.webp`,
-          name: `couple_${num}.webp`,
-          thumbUrl: cfg.coupleItemsPreview.includes(i)
-            ? `${cfg.baseUrl}couple_${num}_preview.webp`
-            : "",
-          contentType: "image/webp"
-        }
-      ]
-    }
-
-    else if (cfg.liveItemNumbers.includes(i)) {
-      type = Type.LIVE
-      medias = [
-        {
-          url: `${cfg.baseUrl}${cfg.fileNamePrefix}${num}.mp4`,
-          name: `${cfg.fileNamePrefix}${num}.mp4`,
-          thumbUrl: "",
-          contentType: "video/mp4"
-        },
-        {
-          url: `${cfg.baseUrl}${cfg.fileNamePrefix}${num}.webp`,
-          name: `${cfg.fileNamePrefix}${num}.webp`,
-          thumbUrl: cfg.previewItemNumbers.includes(i)
-            ? `${cfg.baseUrl}${cfg.fileNamePrefix}${num}_preview.webp`
-            : "",
-          contentType: "image/webp"
-        }
-      ]
-    }
-
-    else {
-      medias = [
-        {
-          url: `${cfg.baseUrl}${cfg.fileNamePrefix}${num}.webp`,
-          name: `${cfg.fileNamePrefix}${num}.webp`,
-          thumbUrl: cfg.previewItemNumbers.includes(i)
-            ? `${cfg.baseUrl}${cfg.fileNamePrefix}${num}_preview.webp`
-            : "",
-          contentType: "image/webp"
-        }
-      ]
-    }
-
-    items.push({
-      id,
-      medias,
-      categoryId: cfg.categoryId,
-      isPremium: true,
-      createdAt,
-      subType: 0,
-      type,
-      coinToUnlock: 0
-    })
-  })
-
-  return items
-}
-
-/* =======================
-   GENERATE OUTPUT
-======================= */
-function generate() {
+/**
+ * Normalize API → Category Config
+ */
+function normalize() {
   try {
-    const configs =
-      JSON.parse(document.getElementById("input").value)
+    const raw = JSON.parse(document.getElementById("input").value)
 
-    const allItems = configs.flatMap(generateCategoryItems)
+    const map = {}
+
+    raw.forEach(item => {
+      const id = item.categoryId
+      if (!map[id]) {
+        map[id] = {
+          baseCreatedAt: item.baseCreatedAt,
+          baseUrl: item.baseUrl,
+          categoryId: item.categoryId,
+          fileNamePrefix: item.fileNamePrefix || "",
+          liveItemNumbers: [],
+          previewItemNumbers: [],
+          doubleItems: [],
+          daysItems: [],
+          coupleItemsPreview: [],
+          coupleItemsNoPreview: [],
+          orderItems: item.orderItems || []
+        }
+      }
+
+      const cfg = map[id]
+
+      merge(cfg.liveItemNumbers, item.liveItemNumbers)
+      merge(cfg.previewItemNumbers, item.previewItemNumbers)
+      merge(cfg.doubleItems, item.doubleItems)
+      merge(cfg.daysItems, item.daysItems)
+      merge(cfg.coupleItemsPreview, item.coupleItemsPreview)
+      merge(cfg.coupleItemsNoPreview, item.coupleItemsNoPreview)
+    })
+
+    const result = Object.values(map).map(cfg => ({
+      ...cfg,
+      liveItemNumbers: sort(cfg.liveItemNumbers),
+      previewItemNumbers: sort(cfg.previewItemNumbers),
+      doubleItems: sort(cfg.doubleItems),
+      daysItems: sort(cfg.daysItems),
+      coupleItemsPreview: sort(cfg.coupleItemsPreview),
+      coupleItemsNoPreview: sort(cfg.coupleItemsNoPreview)
+    }))
 
     document.getElementById("output").value =
-      JSON.stringify(allItems, null, 2)
+      JSON.stringify(result, null, 2)
 
   } catch (e) {
-    alert("❌ Generate error: " + e)
+    alert("❌ Normalize failed: " + e)
   }
 }
 
-/* =======================
-   DOWNLOAD
-======================= */
+/**
+ * Helpers
+ */
+function merge(target, source) {
+  if (!Array.isArray(source)) return
+  source.forEach(v => {
+    if (!target.includes(v)) target.push(v)
+  })
+}
+
+function sort(arr) {
+  return arr.sort((a, b) => a - b)
+}
+
+/**
+ * Download result
+ */
 function download() {
-  const blob = new Blob(
-    [document.getElementById("output").value],
-    { type: "application/json" }
-  )
+  const data = document.getElementById("output").value
+  if (!data) {
+    alert("❌ Nothing to download")
+    return
+  }
+  const blob = new Blob([data], { type: "application/json" })
   const a = document.createElement("a")
   a.href = URL.createObjectURL(blob)
-  a.download = "wallpaper_items.json"
+  a.download = "category_config.json"
   a.click()
 }
 </script>
