@@ -33,8 +33,8 @@
 
 <body>
 
-<h2>📥 Category Config (Loaded from API)</h2>
-<textarea id="input" readonly placeholder="Click 'Load API'..."></textarea>
+<h2>📥 Category Config JSON</h2>
+<textarea id="input" placeholder="Click Load API..."></textarea>
 
 <button onclick="loadFromApi()">Load API</button>
 <button onclick="generate()">Generate</button>
@@ -58,44 +58,45 @@ const Type = {
   COUPLE: 4
 }
 
-let apiData = null
+/* =======================
+   API → CATEGORY CONFIG
+======================= */
+function apiToCategoryConfig(apiData) {
+  const now = Math.floor(Date.now() / 1000)
+
+  return apiData.map((c, index) => ({
+    baseCreatedAt: now + index * 1000,
+    baseUrl: c.baseUrl,
+    categoryId: c.categoryId || c.id,
+    fileNamePrefix: c.fileNamePrefix || "",
+    liveItemNumbers: c.liveItemNumbers || [],
+    previewItemNumbers: c.previewItemNumbers || [],
+    doubleItems: c.doubleItems || [],
+    daysItems: c.daysItems || [],
+    coupleItemsPreview: c.coupleItemsPreview || [],
+    coupleItemsNoPreview: c.coupleItemsNoPreview || [],
+    orderItems: c.orderItems || []
+  }))
+}
 
 /* =======================
-   FETCH API
+   LOAD API
 ======================= */
 async function loadFromApi() {
   try {
     const res = await fetch(API_URL)
     if (!res.ok) throw new Error("API error")
 
-    apiData = await res.json()
+    const apiData = await res.json()
+    const configs = apiToCategoryConfig(apiData)
 
     document.getElementById("input").value =
-      JSON.stringify(apiData, null, 2)
+      JSON.stringify(configs, null, 2)
 
-    alert("✅ API loaded")
+    alert("✅ API loaded & converted to config")
   } catch (e) {
     alert("❌ Load API failed: " + e.message)
   }
-}
-
-/* =======================
-   MAP API → CONFIG
-======================= */
-function mapApiToConfig(apiCategories) {
-  return apiCategories.map(cat => ({
-    baseCreatedAt: Math.floor(Date.now() / 1000),
-    baseUrl: cat.baseUrl,
-    categoryId: cat.categoryId ?? cat.id,
-    fileNamePrefix: cat.fileNamePrefix ?? "",
-    liveItemNumbers: cat.liveItems ?? [],
-    previewItemNumbers: cat.previewItems ?? [],
-    doubleItems: cat.doubleItems ?? [],
-    daysItems: cat.daysItems ?? [],
-    coupleItemsPreview: cat.coupleItemsPreview ?? [],
-    coupleItemsNoPreview: cat.coupleItemsNoPreview ?? [],
-    orderItems: cat.orderItems ?? cat.items ?? []
-  }))
 }
 
 /* =======================
@@ -216,12 +217,9 @@ function generateCategoryItems(cfg) {
 ======================= */
 function generate() {
   try {
-    if (!apiData) {
-      alert("❗ Load API first")
-      return
-    }
+    const configs =
+      JSON.parse(document.getElementById("input").value)
 
-    const configs = mapApiToConfig(apiData)
     const allItems = configs.flatMap(generateCategoryItems)
 
     document.getElementById("output").value =
@@ -233,7 +231,7 @@ function generate() {
 }
 
 /* =======================
-   DOWNLOAD JSON
+   DOWNLOAD
 ======================= */
 function download() {
   const blob = new Blob(
