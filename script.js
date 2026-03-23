@@ -83,11 +83,49 @@ async function loadProducts() {
     const articleContainer = document.getElementById('article-products-container');
     if (!articleContainer) return;
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentArticleId = urlParams.get('id');
+
     try {
-        const response = await fetch('data/products.json');
-        const products = await response.json();
+        const response = await fetch('data/products.json?' + new Date().getTime());
+        let products = await response.json();
+
+        // If viewing an article, fetch exactly the product list assigned and update HTML
+        if (currentArticleId) {
+            const artRes = await fetch('data/articles.json?' + new Date().getTime());
+            const articles = await artRes.json();
+            const article = articles.find(a => a.id === currentArticleId);
+            
+            if (article) {
+                // Populate article placeholders dynamically
+                const titleEl = document.getElementById('dynamic-title');
+                if (titleEl) {
+                    titleEl.innerText = article.title;
+                    document.title = article.title; // update page title
+                }
+                const badgeEl = document.getElementById('dynamic-badge');
+                if (badgeEl) badgeEl.innerText = article.badge || article.category;
+                
+                const introEl = document.getElementById('dynamic-intro');
+                if (introEl) introEl.innerHTML = `<p>${article.description || ''}</p>`;
+                
+                // Keep only assigned products
+                if (article.productIds && Array.isArray(article.productIds)) {
+                    products = products.filter(p => article.productIds.includes(p.id));
+                } else {
+                    products = []; // No associated products
+                }
+            } else {
+                products = []; // Article not found
+            }
+        }
         
         articleContainer.innerHTML = '';
+        if (products.length === 0) {
+            articleContainer.innerHTML = '<p style="text-align:center; color:#888;">Chưa có sản phẩm nào trong bài viết này.</p>';
+            return;
+        }
+
         products.forEach(product => {
             const prosHtml = product.pros.map(p => `<li>${p}</li>`).join('');
             const consHtml = product.cons.map(c => `<li>${c}</li>`).join('');

@@ -114,6 +114,15 @@ function editArticle(index) {
     document.getElementById('artUrl').value = art.url || 'article.html';
     document.getElementById('artImage').value = art.image || '';
     
+    // Check the corresponding products
+    document.querySelectorAll('input[name="artProducts"]').forEach(cb => cb.checked = false);
+    if (art.productIds && Array.isArray(art.productIds)) {
+        art.productIds.forEach(pid => {
+            const cb = document.querySelector(`input[name="artProducts"][value="${pid}"]`);
+            if (cb) cb.checked = true;
+        });
+    }
+    
     document.getElementById('modalArticleTitle').innerText = 'Sửa Bài Viết';
     document.getElementById('modalArticle').classList.add('active');
 }
@@ -121,6 +130,10 @@ function editArticle(index) {
 function openArticleModal() {
     document.getElementById('formArticle').reset();
     document.getElementById('artIndex').value = '';
+    
+    // Clear product checkboxes
+    document.querySelectorAll('input[name="artProducts"]').forEach(cb => cb.checked = false);
+    
     document.getElementById('modalArticleTitle').innerText = 'Thêm Bài Viết';
     document.getElementById('modalArticle').classList.add('active');
 }
@@ -128,6 +141,10 @@ function openArticleModal() {
 function saveArticle(e) {
     e.preventDefault();
     const index = document.getElementById('artIndex').value;
+    
+    // Get checked productIds
+    const productIds = Array.from(document.querySelectorAll('input[name="artProducts"]:checked')).map(cb => cb.value);
+
     const art = {
         id: document.getElementById('artId').value,
         title: document.getElementById('artTitle').value,
@@ -135,7 +152,8 @@ function saveArticle(e) {
         category: document.getElementById('artCategory').value,
         badge: document.getElementById('artBadge').value,
         url: document.getElementById('artUrl').value,
-        image: document.getElementById('artImage').value
+        image: document.getElementById('artImage').value,
+        productIds: productIds
     };
 
     if (index === '') {
@@ -177,6 +195,19 @@ function renderProducts() {
             </tr>
         `;
     });
+    populateProductCheckboxes();
+}
+
+function populateProductCheckboxes() {
+    const container = document.getElementById('artProductCheckboxes');
+    if (!container) return;
+    
+    container.innerHTML = productsData.map(p => `
+        <label style="display: block; font-weight: normal; margin-bottom: 5px; cursor: pointer;">
+            <input type="checkbox" name="artProducts" value="${p.id}"> 
+            [${p.id}] ${p.title.substring(0, 50)}...
+        </label>
+    `).join('');
 }
 
 function moveProduct(index, dir) {
