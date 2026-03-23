@@ -1,6 +1,7 @@
 // Admin JS Content
 let articlesData = [];
 let productsData = [];
+let categoriesData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Load config from localStorage
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Setup forms
     document.getElementById('formArticle').addEventListener('submit', saveArticle);
     document.getElementById('formProduct').addEventListener('submit', saveProduct);
+    document.getElementById('formCategory').addEventListener('submit', saveCategory);
 
     // Setup Publish Button
     document.getElementById('btnPublish').addEventListener('click', publishToGitHub);
@@ -54,9 +56,19 @@ async function loadInitialData() {
         console.warn("Could not load products.json, starting empty.");
         productsData = [];
     }
+
+    try {
+        const catRes = await fetch('data/categories.json?' + new Date().getTime());
+        categoriesData = await catRes.json();
+    } catch (e) {
+        console.warn("Could not load categories.json, starting empty.");
+        categoriesData = [];
+    }
     
+    populateCategoryDropdowns();
     renderArticles();
     renderProducts();
+    renderCategories();
 }
 
 // ================= ARTICLES =================
@@ -152,7 +164,7 @@ function renderProducts() {
             <tr>
                 <td>${prod.id}</td>
                 <td><img src="${img}" width="60" alt=""></td>
-                <td><strong>${prod.title}</strong><br><small>${prod.trackingId}</small></td>
+                <td><strong>${prod.title}</strong><br><small>${prod.trackingId}</small>&nbsp;<span class="badge" style="background:#17a2b8;">${prod.category || 'N/A'}</span></td>
                 <td><del>${prod.originalPrice}</del><br><span style="color:#ee4d2d; font-weight:bold;">${prod.discountedPrice}</span></td>
                 <td>
                     <button class="btn btn-secondary btn-sm" onclick="moveProduct(${index}, -1)">▲</button>
@@ -187,6 +199,7 @@ function editProduct(index) {
     const prod = productsData[index];
     document.getElementById('prodIndex').value = index;
     document.getElementById('prodId').value = prod.id || '';
+    document.getElementById('prodCategory').value = prod.category || '';
     document.getElementById('prodTrackingId').value = prod.trackingId || '';
     document.getElementById('prodTitle').value = prod.title || '';
     document.getElementById('prodDesc').value = prod.desc || '';
@@ -223,6 +236,7 @@ function saveProduct(e) {
 
     const prod = {
         id: document.getElementById('prodId').value,
+        category: document.getElementById('prodCategory').value,
         trackingId: document.getElementById('prodTrackingId').value,
         title: document.getElementById('prodTitle').value,
         desc: document.getElementById('prodDesc').value,
@@ -256,6 +270,84 @@ function deleteProduct(index) {
     }
 }
 
+// ================= CATEGORIES =================
+function renderCategories() {
+    const tbody = document.querySelector('#tableCategories tbody');
+    tbody.innerHTML = '';
+    categoriesData.forEach((cat, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${cat.name}</strong></td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="editCategory(${index})">Sửa</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCategory(${index})">Xóa</button>
+                </td>
+            </tr>
+        `;
+    });
+    populateCategoryDropdowns();
+}
+
+function openCategoryModal() {
+    document.getElementById('formCategory').reset();
+    document.getElementById('catIndex').value = '';
+    document.getElementById('modalCategoryTitle').innerText = 'Thêm Danh Mục';
+    document.getElementById('modalCategory').classList.add('active');
+}
+
+function editCategory(index) {
+    const cat = categoriesData[index];
+    document.getElementById('catIndex').value = index;
+    document.getElementById('catName').value = cat.name || '';
+    
+    document.getElementById('modalCategoryTitle').innerText = 'Sửa Danh Mục';
+    document.getElementById('modalCategory').classList.add('active');
+}
+
+function saveCategory(e) {
+    e.preventDefault();
+    const index = document.getElementById('catIndex').value;
+    const cat = {
+        name: document.getElementById('catName').value
+    };
+
+    if (index === '') {
+        categoriesData.push(cat);
+    } else {
+        categoriesData[index] = cat;
+    }
+    closeModal('modalCategory');
+    renderCategories();
+}
+
+function deleteCategory(index) {
+    if (confirm('Bạn chắc chắn muốn xóa danh mục này?')) {
+        categoriesData.splice(index, 1);
+        renderCategories();
+    }
+}
+
+function populateCategoryDropdowns() {
+    const artCat = document.getElementById('artCategory');
+    const prodCat = document.getElementById('prodCategory');
+    
+    let optionsHtml = '<option value="">-- Chọn Danh Mục --</option>';
+    categoriesData.forEach(c => {
+        optionsHtml += `<option value="${c.name}">${c.name}</option>`;
+    });
+    
+    if (artCat) {
+        const val = artCat.value;
+        artCat.innerHTML = optionsHtml;
+        artCat.value = val; // Restore selected value
+    }
+    if (prodCat) {
+        const val = prodCat.value;
+        prodCat.innerHTML = optionsHtml;
+        prodCat.value = val; // Restore selected value
+    }
+}
+
 // ================= UTILS =================
 function closeModal(id) {
     document.getElementById(id).classList.remove('active');
@@ -278,6 +370,7 @@ async function publishToGitHub() {
     showLoading(true);
 
     try {
+        await updateGithubFile(owner, repo, branch, token, 'data/categories.json', JSON.stringify(categoriesData, null, 2));
         await updateGithubFile(owner, repo, branch, token, 'data/articles.json', JSON.stringify(articlesData, null, 2));
         await updateGithubFile(owner, repo, branch, token, 'data/products.json', JSON.stringify(productsData, null, 2));
         alert("Push thành công lên GitHub!");

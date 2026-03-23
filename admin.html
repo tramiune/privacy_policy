@@ -82,6 +82,7 @@
         <div class="tabs">
             <button class="tab-btn active" data-target="tab-articles">Bài Viết (Articles)</button>
             <button class="tab-btn" data-target="tab-products">Sản Phẩm (Products)</button>
+            <button class="tab-btn" data-target="tab-categories">Danh Mục (Categories)</button>
         </div>
 
         <!-- TAB BÀI VIẾT -->
@@ -129,6 +130,25 @@
                 </table>
             </div>
         </div>
+
+        <!-- TAB DANH MỤC -->
+        <div id="tab-categories" class="tab-content card">
+            <div class="header">
+                <h3>Danh sách Danh Mục</h3>
+                <button class="btn btn-primary" onclick="openCategoryModal()">+ Thêm Danh Mục</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="tableCategories">
+                    <thead>
+                        <tr>
+                            <th>Tên Danh Mục</th>
+                            <th width="150">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL ARTICLE -->
@@ -154,7 +174,9 @@
                 </div>
                 <div class="form-group">
                     <label>Danh mục (Category)</label>
-                    <input type="text" id="artCategory">
+                    <select id="artCategory">
+                        <option value="">-- Chọn Danh Mục --</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Badge (Nhãn nổi bật)</label>
@@ -169,6 +191,24 @@
                     <input type="text" id="artImage" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Lưu Bài Viết</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CATEGORY -->
+    <div class="modal" id="modalCategory">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalCategoryTitle">Thêm Danh Mục</h3>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('modalCategory')">Đóng</button>
+            </div>
+            <form id="formCategory">
+                <input type="hidden" id="catIndex" value="">
+                <div class="form-group">
+                    <label>Tên Danh Mục</label>
+                    <input type="text" id="catName" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Lưu Danh Mục</button>
             </form>
         </div>
     </div>
@@ -194,9 +234,17 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Tiêu Đề</label>
-                    <input type="text" id="prodTitle" required>
+                <div class="flex">
+                    <div class="form-group" style="flex: 2">
+                        <label>Tiêu Đề</label>
+                        <input type="text" id="prodTitle" required>
+                    </div>
+                    <div class="form-group" style="flex: 1">
+                        <label>Danh Mục</label>
+                        <select id="prodCategory">
+                            <option value="">-- Chọn Danh Mục --</option>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="form-group">
