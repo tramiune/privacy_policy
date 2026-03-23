@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Note: Prevent default for demo only if href is '#'
             if(link.getAttribute('href') === '#') {
                 e.preventDefault(); 
-                alert("Redirecting to Shopee...");
+                alert("Đang chuyển hướng sang Shopee...");
             }
             
             const productName = link.getAttribute('data-product') || 'Unknown Product';
