@@ -33,36 +33,8 @@
             <p>Tìm chính xác những gì bạn đang tìm kiếm.</p>
         </section>
 
-        <section class="article-list">
-            <div class="article-card">
-                <img src="https://placehold.co/300x200/ee4d2d/fff?text=Doi+Song" alt="Đời Sống">
-                <div class="article-info">
-                    <span class="badge">Đời Sống</span>
-                    <h2><a href="article.html">Top 5 Góc Làm Việc Tối Giản Giúp Tăng Năng Suất</a></h2>
-                    <p>Nâng cấp không gian làm việc của bạn với các góc bàn gọn gàng và giá cả phải chăng...</p>
-                    <a href="article.html" class="read-more">Đọc toàn bộ bài viết &rarr;</a>
-                </div>
-            </div>
-            
-            <div class="article-card">
-                <img src="https://placehold.co/300x200/ee4d2d/fff?text=Lam+Dep" alt="Làm Đẹp">
-                <div class="article-info">
-                    <span class="badge">Làm Đẹp</span>
-                    <h2><a href="article.html">Sản Phẩm Chăm Sóc Da Tốt Nhất Dưới 500k</a></h2>
-                    <p>Bạn không cần phải tốn bộn tiền để có làn da sáng mịn. Đây là những lựa chọn ưu tiên thân thiện với túi tiền...</p>
-                    <a href="article.html" class="read-more">Đọc toàn bộ bài viết &rarr;</a>
-                </div>
-            </div>
-            
-            <div class="article-card">
-                <img src="https://placehold.co/300x200/ee4d2d/fff?text=Nha+Cua" alt="Nhà Cửa">
-                <div class="article-info">
-                    <span class="badge">Mẹo Vặt</span>
-                    <h2><a href="article.html">10 Dụng Cụ Nhà Bếp Sẽ Tiết Kiệm Cho Bạn Hàng Giờ Đồng Hồ</a></h2>
-                    <p>Nấu ăn dễ dàng hơn khi bạn có đúng công cụ. Hãy xem qua các dụng cụ nhà bếp cứu cánh này...</p>
-                    <a href="article.html" class="read-more">Đọc toàn bộ bài viết &rarr;</a>
-                </div>
-            </div>
+        <section class="article-list" id="category-articles-container">
+            <!-- Articles will be injected here dynamically by script.js using data/articles.json -->
         </section>
     </main>
 
@@ -73,6 +45,8 @@
         </div>
     </footer>
     
+    <script src="data/articles.js"></script>
+    <script src="data/products.js"></script>
     <script type="module" src="script.js"></script>
 </body>
 </html>
