@@ -38,28 +38,8 @@
 
         <section class="top-products">
             <h2>🔥 Danh Mục Nổi Bật</h2>
-            <div class="card-grid">
-                <a href="article.html" class="card">
-                    <img src="https://placehold.co/400x250/ee4d2d/fff?text=Trang+Tri+Nha" alt="Trang Trí Nhà Cửa">
-                    <div class="card-body">
-                        <h3>Top 10 Ý Tưởng Trang Trí Nhà Dưới 500k</h3>
-                        <p>Thay đổi không gian sống của bạn mà không tốn quá nhiều chi phí với những món đồ đáng yêu này.</p>
-                    </div>
-                </a>
-                <a href="article.html" class="card">
-                    <img src="https://placehold.co/400x250/ee4d2d/fff?text=Cong+Nghe" alt="Đồ Công Nghệ">
-                    <div class="card-body">
-                        <h3>Những Món Đồ Công Nghệ Phải Có Năm 2026</h3>
-                        <p>Khám phá những thiết bị thông minh nhất mà bạn không hề biết là mình cần.</p>
-                    </div>
-                </a>
-                <a href="article.html" class="card">
-                    <img src="https://placehold.co/400x250/ee4d2d/fff?text=Qua+Tang" alt="Ý Tưởng Quà Tặng">
-                    <div class="card-body">
-                        <h3>15 Ý Tưởng Quà Tặng Hoàn Hảo Cho Nam Giới</h3>
-                        <p>Đang gặp khó khăn trong việc tìm quà tặng hoàn hảo? Hãy xem danh sách đã được chọn lọc của chúng tôi.</p>
-                    </div>
-                </a>
+            <div class="card-grid" id="home-articles-container">
+                <!-- Articles will be injected here dynamically by script.js using data/articles.json -->
             </div>
         </section>
     </main>
@@ -71,6 +51,8 @@
         </div>
     </footer>
     
+    <script src="data/articles.js"></script>
+    <script src="data/products.js"></script>
     <script type="module" src="script.js"></script>
 </body>
 </html>
