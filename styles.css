@@ -109,7 +109,7 @@ img {
     width: 100%;
     padding: 14px;
     font-size: 1.1rem;
-    margin-top: 15px;
+    margin-top: 5px;
     box-shadow: 0 4px 6px rgba(238, 77, 45, 0.3);
 }
 
@@ -117,6 +117,88 @@ img {
     background: var(--primary-hover);
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(238, 77, 45, 0.4);
+}
+
+/* Enhancing the CTA button */
+.btn-pulse {
+    animation: pulse-animation 2s infinite;
+    font-size: 1.25rem;
+    padding: 16px;
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+@keyframes pulse-animation {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(238, 77, 45, 0.7); }
+    50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(238, 77, 45, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(238, 77, 45, 0); }
+}
+
+/* Pricing & Vouchers */
+.price-section {
+    margin-bottom: 12px;
+    background: #fff8f6;
+    padding: 14px;
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+}
+
+.original-price {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.discounted-price {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #444;
+}
+
+.discounted-price span {
+    color: var(--primary);
+    font-size: 1.6rem;
+}
+
+.urgency-text {
+    font-size: 0.85rem;
+    color: #eab308;
+    font-weight: 600;
+    margin-top: 6px;
+    display: inline-block;
+}
+
+.voucher-box {
+    border: 2px dashed #ffbda6;
+    background-color: #fffaf9;
+    padding: 15px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+}
+
+.voucher-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
+.voucher-codes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.voucher-tag {
+    background: var(--primary);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(238, 77, 45, 0.2);
+    border: 1px dashed white;
 }
 
 /* Homepage specific */
@@ -319,11 +401,13 @@ img {
 .product-image {
     flex: 1;
     position: relative;
+    max-width: 350px;
 }
 
 .product-image img {
     border-radius: var(--radius);
     border: 1px solid var(--border);
+    width: 100%;
 }
 
 .discount-badge {
@@ -450,6 +534,10 @@ img {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .container {
+        padding: 0 12px;
+    }
+
     .hero h1 { font-size: 2rem; }
     
     .article-card {
@@ -464,6 +552,10 @@ img {
     .product-content {
         flex-direction: column;
         gap: 20px;
+    }
+
+    .product-image {
+        max-width: 100%;
     }
     
     .pros-cons {
