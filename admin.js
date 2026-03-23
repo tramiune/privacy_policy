@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
     document.getElementById('ghBranch').value = localStorage.getItem('ghBranch') || 'main';
 
-    // Save config on change
+    // Save config on input
     ['ghOwner', 'ghRepo', 'ghToken', 'ghBranch'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
+        document.getElementById(id).addEventListener('input', (e) => {
             localStorage.setItem(id, e.target.value);
         });
     });
@@ -390,6 +390,12 @@ async function publishToGitHub() {
     const repo = document.getElementById('ghRepo').value.trim();
     const token = document.getElementById('ghToken').value.trim();
     const branch = document.getElementById('ghBranch').value.trim();
+
+    // Ensure it saves even if copy-pasted directly before hitting Publish
+    localStorage.setItem('ghOwner', owner);
+    localStorage.setItem('ghRepo', repo);
+    localStorage.setItem('ghToken', token);
+    localStorage.setItem('ghBranch', branch);
 
     if (!owner || !repo || !token) {
         alert("Vui lòng nhập đầy đủ Owner, Repo, Branch và Token!");
