@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wallpaper Config Normalizer</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: #e5e7eb;
+      font-family: monospace;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 260px;
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    button {
+      padding: 10px 16px;
+      margin-right: 10px;
+      background: #22c55e;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #38bdf8;
+    }
+  </style>
+</head>
+<body>
+
+<h2>📥 API Raw Data</h2>
+<textarea id="input" placeholder="Load API trước..."></textarea>
+
+<button onclick="loadApi()">Load API</button>
+<button class="secondary" onclick="normalize()">Generate Config</button>
+<button onclick="download()">Download</button>
+
+<h2>📦 Normalized Category Config</h2>
+<textarea id="output"></textarea>
+
+<script>
+const API_URL =
+  "https://tramiune.github.io/tramiune001_res_wallpaper/dev/wallpaper.json"
+
+/**
+ * Load API raw
+ */
+async function loadApi() {
+  try {
+    const res = await fetch(API_URL)
+    const json = await res.json()
+    document.getElementById("input").value =
+      JSON.stringify(json, null, 2)
+  } catch (e) {
+    alert("❌ Load API failed: " + e)
+  }
+}
+
+/**
+ * Normalize API → Category Config
+ */
+function normalize() {
+  try {
+    const raw = JSON.parse(document.getElementById("input").value)
+
+    const map = {}
+
+    raw.forEach(item => {
+      const id = item.categoryId
+      if (!map[id]) {
+        map[id] = {
+          baseCreatedAt: item.baseCreatedAt,
+          baseUrl: item.baseUrl,
+          categoryId: item.categoryId,
+          fileNamePrefix: item.fileNamePrefix || "",
+          liveItemNumbers: [],
+          previewItemNumbers: [],
+          doubleItems: [],
+          daysItems: [],
+          coupleItemsPreview: [],
+          coupleItemsNoPreview: [],
+          orderItems: item.orderItems || []
+        }
+      }
+
+      const cfg = map[id]
+
+      merge(cfg.liveItemNumbers, item.liveItemNumbers)
+      merge(cfg.previewItemNumbers, item.previewItemNumbers)
+      merge(cfg.doubleItems, item.doubleItems)
+      merge(cfg.daysItems, item.daysItems)
+      merge(cfg.coupleItemsPreview, item.coupleItemsPreview)
+      merge(cfg.coupleItemsNoPreview, item.coupleItemsNoPreview)
+    })
+
+    const result = Object.values(map).map(cfg => ({
+      ...cfg,
+      liveItemNumbers: sort(cfg.liveItemNumbers),
+      previewItemNumbers: sort(cfg.previewItemNumbers),
+      doubleItems: sort(cfg.doubleItems),
+      daysItems: sort(cfg.daysItems),
+      coupleItemsPreview: sort(cfg.coupleItemsPreview),
+      coupleItemsNoPreview: sort(cfg.coupleItemsNoPreview)
+    }))
+
+    document.getElementById("output").value =
+      JSON.stringify(result, null, 2)
+
+  } catch (e) {
+    alert("❌ Normalize failed: " + e)
+  }
+}
+
+/**
+ * Helpers
+ */
+function merge(target, source) {
+  if (!Array.isArray(source)) return
+  source.forEach(v => {
+    if (!target.includes(v)) target.push(v)
+  })
+}
+
+function sort(arr) {
+  return arr.sort((a, b) => a - b)
+}
+
+/**
+ * Download result
+ */
+function download() {
+  const data = document.getElementById("output").value
+  if (!data) {
+    alert("❌ Nothing to download")
+    return
+  }
+  const blob = new Blob([data], { type: "application/json" })
+  const a = document.createElement("a")
+  a.href = URL.createObjectURL(blob)
+  a.download = "category_config.json"
+  a.click()
+}
+</script>
+
+</body>
+</html>
