@@ -34,9 +34,10 @@ function trackEvent(eventName, params = {}) {
 }
 
 // ====== Data Fetching & Dynamic Rendering ======
-function loadArticles() {
+async function loadArticles() {
     try {
-        const articles = window.DATA_ARTICLES || [];
+        const response = await fetch('data/articles.json');
+        const articles = await response.json();
         
         // Render on Home Page (limit to 3 for trending)
         const homeContainer = document.getElementById('home-articles-container');
@@ -78,12 +79,13 @@ function loadArticles() {
     }
 }
 
-function loadProducts() {
+async function loadProducts() {
     const articleContainer = document.getElementById('article-products-container');
     if (!articleContainer) return;
 
     try {
-        const products = window.DATA_PRODUCTS || [];
+        const response = await fetch('data/products.json');
+        const products = await response.json();
         
         articleContainer.innerHTML = '';
         products.forEach(product => {
@@ -219,11 +221,11 @@ function attachAffiliateListeners() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     // 1. Fetch JSON data conditionally based on page containers
-    loadArticles();
-    loadProducts();
+    await loadArticles();
+    await loadProducts();
 
     // 2. Track Affiliate Button Clicks for static buttons (like the Sticky CTA)
     attachAffiliateListeners();

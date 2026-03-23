@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Quản Lý Dữ Liệu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ee4d2d;
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 5px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .flex { display: flex; gap: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid var(--border-color); padding: 10px; text-align: left; }
+        th { background: #f8f9fa; }
+        .badge { background: var(--primary-color); color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: 1px solid var(--border-color); background: white; border-radius: 4px; }
+        .tab-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); color: white; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">Đang xử lý...</div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Quản Lý Dữ Liệu JSON</h1>
+            <a href="index.html" class="btn btn-secondary">Xem Web</a>
+        </div>
+
+        <div class="card">
+            <h3>Cấu hình GitHub (Dùng để Push Data)</h3>
+            <div class="flex" style="flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>Owner (Username)</label>
+                    <input type="text" id="ghOwner" placeholder="VD: tramiune">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>Repo Name</label>
+                    <input type="text" id="ghRepo" placeholder="VD: affiliate_site">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>Branch</label>
+                    <input type="text" id="ghBranch" value="main" placeholder="VD: main">
+                </div>
+                <div class="form-group" style="flex: 2; min-width: 300px;">
+                    <label>GitHub Token (PAT)</label>
+                    <input type="password" id="ghToken" placeholder="ghp_xxxxxx">
+                </div>
+            </div>
+            <button class="btn btn-success" id="btnPublish">Lưu & Publish lên GitHub</button>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">Thay đổi trên Admin chỉ lưu tạm trên trình duyệt. Bạn cần ấn Publish để commit thẳng lên GitHub.</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-target="tab-articles">Bài Viết (Articles)</button>
+            <button class="tab-btn" data-target="tab-products">Sản Phẩm (Products)</button>
+        </div>
+
+        <!-- TAB BÀI VIẾT -->
+        <div id="tab-articles" class="tab-content active card">
+            <div class="header">
+                <h3>Danh sách Bài Viết</h3>
+                <button class="btn btn-primary" onclick="openArticleModal()">+ Thêm Bài Viết</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="tableArticles">
+                    <thead>
+                        <tr>
+                            <th width="50">ID</th>
+                            <th>Ảnh</th>
+                            <th>Tiêu Đề</th>
+                            <th>Danh Mục</th>
+                            <th width="120">Thứ Tự</th>
+                            <th width="150">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB SẢN PHẨM -->
+        <div id="tab-products" class="tab-content card">
+            <div class="header">
+                <h3>Danh sách Sản Phẩm</h3>
+                <button class="btn btn-primary" onclick="openProductModal()">+ Thêm Sản Phẩm</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="tableProducts">
+                    <thead>
+                        <tr>
+                            <th width="50">ID</th>
+                            <th>Ảnh</th>
+                            <th>Tiêu Đề</th>
+                            <th>Giá Gốc / Giá Giảm</th>
+                            <th width="120">Thứ Tự</th>
+                            <th width="150">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ARTICLE -->
+    <div class="modal" id="modalArticle">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalArticleTitle">Thêm Bài Viết</h3>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('modalArticle')">Đóng</button>
+            </div>
+            <form id="formArticle">
+                <input type="hidden" id="artIndex" value="">
+                <div class="form-group">
+                    <label>ID</label>
+                    <input type="text" id="artId" required>
+                </div>
+                <div class="form-group">
+                    <label>Tiêu Đề</label>
+                    <input type="text" id="artTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>Mô tả (Description)</label>
+                    <textarea id="artDesc" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Danh mục (Category)</label>
+                    <input type="text" id="artCategory">
+                </div>
+                <div class="form-group">
+                    <label>Badge (Nhãn nổi bật)</label>
+                    <input type="text" id="artBadge">
+                </div>
+                <div class="form-group">
+                    <label>Link (URL)</label>
+                    <input type="text" id="artUrl" value="article.html">
+                </div>
+                <div class="form-group">
+                    <label>Ảnh đại diện (URL)</label>
+                    <input type="text" id="artImage" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Lưu Bài Viết</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PRODUCT -->
+    <div class="modal" id="modalProduct">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="modalProductTitle">Thêm Sản Phẩm</h3>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('modalProduct')">Đóng</button>
+            </div>
+            <form id="formProduct">
+                <input type="hidden" id="prodIndex" value="">
+                
+                <div class="flex">
+                    <div class="form-group" style="flex: 1">
+                        <label>ID</label>
+                        <input type="text" id="prodId" required>
+                    </div>
+                    <div class="form-group" style="flex: 1">
+                        <label>Tracking ID (Shopee ref)</label>
+                        <input type="text" id="prodTrackingId">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tiêu Đề</label>
+                    <input type="text" id="prodTitle" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Mô tả chi tiết</label>
+                    <textarea id="prodDesc" rows="3"></textarea>
+                </div>
+
+                <div class="flex">
+                    <div class="form-group" style="flex: 1">
+                        <label>Đánh giá (VD: ⭐ 4.9)</label>
+                        <input type="text" id="prodRating">
+                    </div>
+                    <div class="form-group" style="flex: 1">
+                        <label>Số lượng bán (VD: Đã bán 23,4k)</label>
+                        <input type="text" id="prodSoldCount">
+                    </div>
+                </div>
+
+                <div class="flex">
+                    <div class="form-group" style="flex: 1">
+                        <label>Giá Gốc</label>
+                        <input type="text" id="prodOriginalPrice">
+                    </div>
+                    <div class="form-group" style="flex: 1">
+                        <label>Giá Khuyến Mãi</label>
+                        <input type="text" id="prodDiscountedPrice">
+                    </div>
+                    <div class="form-group" style="flex: 1">
+                        <label>Hạn Giờ (VD: Kết thúc trong 2h)</label>
+                        <input type="text" id="prodUrgencyText">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Link Shopee (Affiliate)</label>
+                    <input type="text" id="prodLink" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Badge Giảm giá (VD: -35%)</label>
+                    <input type="text" id="prodDiscountBadge">
+                </div>
+
+                <div class="form-group" style="background: #f8f9fa; padding: 10px; border-radius: 4px;">
+                    <label>Media (JSON Array: <code>[{"type": "image", "url": "...", "thumb": "..."}]</code>)</label>
+                    <textarea id="prodMedia" rows="3">[]</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Hoặc Ảnh Đơn Giản (URL Nếu không có Media Array)</label>
+                    <input type="text" id="prodImage">
+                </div>
+
+                <div class="flex">
+                    <div class="form-group" style="flex: 1">
+                        <label>Ưu Điểm (Mỗi dòng 1 mục)</label>
+                        <textarea id="prodPros" rows="4"></textarea>
+                    </div>
+                    <div class="form-group" style="flex: 1">
+                        <label>Nhược Điểm (Mỗi dòng 1 mục)</label>
+                        <textarea id="prodCons" rows="4"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Voucher (Mỗi dòng 1 mục)</label>
+                    <textarea id="prodVouchers" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Lưu Sản Phẩm</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
